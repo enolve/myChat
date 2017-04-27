@@ -6,6 +6,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,8 +15,11 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
+import java.net.InetSocketAddress;
+import java.nio.ByteOrder;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by Administrator on 2017/4/26.
@@ -55,17 +59,35 @@ public class SpringCfg {
         return new NioEventLoopGroup(workThreadCount);
     }
 
-    public Map<ChannelOption<?>, Object> tcpOpt() {
-        Map<ChannelOption<?>, Object> opt = new HashMap<>();
-
+    @Bean
+    public InetSocketAddress tcpPort() {
+        return new InetSocketAddress(port);
     }
 
+    @Bean(name = "tcpOpt", destroyMethod = "shutdownGracefully")
+    public Map<ChannelOption<?>, Object> tcpOpt() {
+        Map<ChannelOption<?>, Object> opt = new HashMap<>();
+        opt.put(ChannelOption.SO_KEEPALIVE, keepAlive);
+        opt.put(ChannelOption.SO_BACKLOG, backlog);
+        return opt;
+    }
+
+    @Bean(name = "serverBootstrap")
     public ServerBootstrap bootstrap() {
         ServerBootstrap serverBootstrap = new ServerBootstrap();
-        serverBootstrap.group(bossGroup(), workGroup()).channel(NioServerSocketChannel.class).childHandler(chatChannelInitalizer);
+        serverBootstrap.group(bossGroup(), workGroup())
+                .channel(NioServerSocketChannel.class).childHandler(chatChannelInitalizer);
+        Map<ChannelOption<?>, Object> tcpChannelOptions = tcpOpt();
+        Set<ChannelOption<?>> keySet = tcpChannelOptions.keySet();
+        for (ChannelOption option : keySet) {
+            serverBootstrap.option(option, tcpChannelOptions.get(option));
+        }
         return serverBootstrap;
     }
 
-
+    @Bean(name = "lengthFieldBasedFrameDecoder")
+    public LengthFieldBasedFrameDecoder lengthFieldBasedFrameDecoder() {
+        return new LengthFieldBasedFrameDecoder(ByteOrder.LITTLE_ENDIAN, 200 * 1024, 0, 4, -4, 0, true);
+    }
 
 }
