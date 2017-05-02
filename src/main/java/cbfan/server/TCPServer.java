@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.net.InetSocketAddress;
 
 /**
@@ -22,6 +23,7 @@ public class TCPServer {
     @Autowired
     private InetSocketAddress tcpPort;
 
+    @PostConstruct
     public void start() {
         ChannelFuture channelFuture = serverBootstrap.bind(tcpPort).addListener(new ChannelFutureListener() {
             @Override

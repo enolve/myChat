@@ -1,0 +1,5 @@
+<root>
+    <item name='java.nio.channels.SocketChannel'>
+        <annotation name='java.lang.annotation.Deprecated'/>
+    </item>
+</root>

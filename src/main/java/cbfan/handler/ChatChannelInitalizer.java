@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
  * Created by Administrator on 2017/4/26.
  */
 @Component
-@Qualifier("springChatChannelInitalizer")
 public class ChatChannelInitalizer extends ChannelInitializer<SocketChannel> {
 
     @Autowired
